@@ -1,0 +1,47 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"          # Every Monday at 08:00 UTC
+  push:
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+  workflow_dispatch:              # Manual trigger from the Actions tab
+
+jobs:
+  audit:
+    name: cargo-audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-audit-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-audit-
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      # Checks Cargo.lock against the RustSec advisory database.
+      # Fails the job if any unmaintained crate or vulnerability is found.
+      - name: Run cargo-audit
+        run: cargo audit
+
+      # ── Optional: deny specific lints (requires cargo-deny) ──────────────
+      # Uncomment below to also enforce licence / duplicate-crate policies.
+      #
+      # - name: Install cargo-deny
+      #   run: cargo install cargo-deny --locked
+      #
+      # - name: Run cargo-deny
+      #   run: cargo deny check
