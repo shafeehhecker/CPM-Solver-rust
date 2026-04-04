@@ -11,7 +11,7 @@ pub enum RelType {
     SS, // Start-to-Start
     FF, // Finish-to-Finish
     SF, // Start-to-Finish
-}
+}//Ignore
 
 impl Default for RelType {
     fn default() -> Self {
